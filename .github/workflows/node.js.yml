@@ -56,7 +56,6 @@ jobs:
     - name: Push Docker image
       run: |
         docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}
-        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:latest
 
     # (Optional) Output image tag
     - name: Print Image Tag
