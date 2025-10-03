@@ -91,6 +91,7 @@ jobs:
       - name: Prepare manifest
         run: |
           IMAGE_TAG=${{ env.BUILD_ID }}
+          echo $IMAGE_TAG
           sed "s/\${IMAGE_TAG}/$IMAGE_TAG/g" src/deployment.yml
 
       # Apply manifest to Kubernetes
