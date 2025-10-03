@@ -64,6 +64,8 @@ jobs:
       run: echo "Pushed image:$ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}"
 
   deploy-to-k8s:
+    permissions:
+      id-token: write
     runs-on: ubuntu-latest
     needs: build
     steps:
