@@ -61,4 +61,4 @@ jobs:
 
     # (Optional) Output image tag
     - name: Print Image Tag
-      run: echo "Pushed image: $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}"
+      run: echo "Pushed image:$ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}"
