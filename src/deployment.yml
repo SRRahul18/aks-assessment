@@ -43,15 +43,16 @@ spec:
 # ----------------------------
 # Ingress with TLS
 # ----------------------------
+
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: hello-node-ingress
-  annotations:
-    kubernetes.io/ingress.class: nginx
+  name: aks-helloworld
+  namespace: Node
 spec:
+  ingressClassName: nginx-static
   rules:
-    - host: hello.example.com   # Replace with your domain
+  - host: hello.example.com   # Replace with your domain
       http:
         paths:
           - path: /
@@ -60,4 +61,6 @@ spec:
               service:
                 name: hello-node-service
                 port:
-                  number: 80
+                  number: 80                
+
+                  
