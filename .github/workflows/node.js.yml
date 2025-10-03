@@ -8,6 +8,15 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    
+env:
+  ACR_NAME: acrdevassessmentacr.azurecr.io       # 🔹 Replace with your ACR name (without .azurecr.io)
+  IMAGE_NAME: hello-node       # 🔹 Replace with your app/image name
+  RESOURCE_GROUP: rg-dev-assessment        # 🔹 Replace with your RG
+  AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}    
 
 jobs:
   build:
@@ -18,18 +27,38 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: Azure CLI Login
+    # 🔹 Authenticate with Azure using Service Principal
+    - name: Azure Login
       uses: azure/login@v2
       with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  
-    - name: Azure CLI script
-      uses: azure/cli@v2
-      with:
-        azcliversion: latest
-        inlineScript: |
-          az account show
-          # You can write your Azure CLI inline scripts here.
-   
+        client-id: ${{ env.AZURE_CLIENT_ID }}
+        tenant-id: ${{ env.AZURE_TENANT_ID }}
+        subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+        client-secret: ${{ env.AZURE_CLIENT_SECRET }}
+
+    # 🔹 Log in to ACR
+    - name: Log in to ACR
+      run: |
+        az acr login --name $ACR_NAME
+
+    # 🔹 Set BUILD_ID (using GitHub Run Number)
+    - name: Set Build ID
+      run: echo "BUILD_ID=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
+
+    # 🔹 Build Docker image
+    - name: Build Docker image
+      run: |
+        docker build \
+          -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID} \
+          -f src/dockerfile
+           
+
+    # 🔹 Push Docker image
+    - name: Push Docker image
+      run: |
+        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}
+        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:latest
+
+    # (Optional) Output image tag
+    - name: Print Image Tag
+      run: echo "Pushed image: $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}"
