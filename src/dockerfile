@@ -1,20 +1,17 @@
-# Use official Node.js image
-FROM node:18-alpine
+FROM node:10.15.1-alpine as builder
 
-# Set working directory
-WORKDIR /usr/src/app
+WORKDIR /opt/src
 
-# Copy package files
-COPY package*.json ./
+COPY package.json .
+COPY package-lock.json .
+RUN npm install
 
-# Install dependencies
-RUN npm install --production
+FROM node:10.15.1-alpine as runner
 
-# Copy app source
-COPY . .
+WORKDIR /opt/run
 
-# Expose port
-EXPOSE 3000
+COPY --from=builder /opt/src/node_modules ./node_modules
+COPY package.json .
+COPY app.js .
 
-# Run the app
 CMD ["npm", "start"]
