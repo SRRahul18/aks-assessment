@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
     
 env:
-  ACR_NAME: acrdevassessmentacr.azurecr.io       # 🔹 Replace with your ACR name (without .azurecr.io)
+  ACR_NAME: acrdevassessmentacr     # 🔹 Replace with your ACR name (without .azurecr.io)
   IMAGE_NAME: hello-node       # 🔹 Replace with your app/image name
   RESOURCE_GROUP: rg-dev-assessment        # 🔹 Replace with your RG
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
