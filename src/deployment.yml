@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
         - name: hello-node
-          image: acrdevassessmentacr.azurecr.io/hello-node:${IMAGE_TAG}  # placeholder
+          image: acrdevassessmentacr.azurecr.io/hello-node:17  # placeholder
           ports:
             - containerPort: 3000
 
