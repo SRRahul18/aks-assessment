@@ -18,7 +18,7 @@ env:
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
   AKS_NAME: aks-dev-assessment
-  K8S_NAMESPACE: Node
+  K8S_NAMESPACE: node
   
 jobs:
   build:
