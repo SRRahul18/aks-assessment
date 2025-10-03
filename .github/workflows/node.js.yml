@@ -96,5 +96,5 @@ jobs:
       # Apply manifest to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f deployment.yml -n ${{ env.K8S_NAMESPACE }}
+          kubectl apply -f src/deployment.yml -n ${{ env.K8S_NAMESPACE }}
           kubectl rollout status deployment/hello-node -n ${{ env.K8S_NAMESPACE }}    
