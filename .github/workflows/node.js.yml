@@ -48,9 +48,7 @@ jobs:
     # 🔹 Build Docker image
     - name: Build Docker image
       run: |
-        docker build \
-          -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID} \
-          -f src/dockerfile
+        docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID} -f src/dockerfile .
            
 
     # 🔹 Push Docker image
