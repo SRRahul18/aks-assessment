@@ -1,0 +1,154 @@
+# ----------------------------
+# Service Account 
+# ----------------------------
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  annotations:
+    azure.workload.identity/client-id: "#{IdaClientId}#"
+    azure.workload.identity/tenant-id: "#{IdaTenantId}#" 
+  labels:
+    azure.workload.identity/use: "true"
+  name: "hello-node-sa"
+---
+
+# ----------------------------
+# ClusterIP Service (internal)
+# ----------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-node-service
+spec:
+  type: ClusterIP
+  selector:
+    app: hello-node
+  ports:
+    - port: 80
+      targetPort: 3000
+
+---
+
+# ----------------------------
+# Deployment
+# ----------------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-node
+  labels:
+    app: hello-node
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello-node
+  template:
+    metadata:
+      labels:
+        app: hello-node
+        azure.workload.identity/use: "true"
+    spec:
+      serviceAccountName: hello-node-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        runAsGroup: 10000
+        allowPrivilegeEscalation: false
+      containers:
+        - name: hello-node
+          image: "#{acrName}#.azurecr.io/#{repoName}#:#{imageTag}#"  # placeholder
+          ports:
+            - containerPort: 3000
+          env:
+            - name: appConfigEndpoint
+              value: "https://#{AppConfigServiceName}#.azconfig.io"
+            - name: KeyVaultBaseUrl
+              value: "https://#{KeyVaultName}#.vault.azure.net/"
+          resources:
+            limits:
+              cpu: 300m
+              memory: 250Mi
+            requests:
+              cpu: 100m
+              memory: 250Mi
+      tolerations:
+      - effect: NoSchedule
+        operator: Exists
+        key: apps    
+---
+# ----------------------------
+# Ingress with TLS
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world
+  annotations:
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: hostname.domain.ext
+    http:
+      paths:
+      - pathType: Prefix
+        path: "/"
+        backend:
+          service:
+            name: hello-node-service
+            port:
+              number: 80
+
+---
+# ----------------------------  
+# Horizontal Pod Autoscaler
+# ----------------------------
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hello-node-hpa
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hello-node
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: appinsights-k8s-api-clusterrole
+rules:
+- apiGroups: ["", "apps"]
+  resources: ["pods", "nodes", "replicasets", "deployments"]
+  verbs: ["get", "list"]
+
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: hello-node-clusterrole-sa-binding
+subjects:
+- kind: ServiceAccount
+  name: hello-node-sa
+roleRef:
+  kind: ClusterRole
+  name: appinsights-k8s-api-clusterrole
+  apiGroup: rbac.authorization.k8s.io
+
+# ----------------------------  
+# End of File
