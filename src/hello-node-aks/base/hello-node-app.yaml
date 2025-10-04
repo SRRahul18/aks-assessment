@@ -57,14 +57,14 @@ spec:
         allowPrivilegeEscalation: false
       containers:
         - name: hello-node
-          image: "#{acrName}#.azurecr.io/#{repoName}#:#{imageTag}#"  # placeholder
+          image: "$ACR_NAME.azurecr.io/$IMAGE_NAME:${IMAGE_TAG}"  # placeholder
           ports:
             - containerPort: 3000
           env:
             - name: appConfigEndpoint
-              value: "https://#{AppConfigServiceName}#.azconfig.io"
+              value: "https://$AppConfigServiceName.azconfig.io"
             - name: KeyVaultBaseUrl
-              value: "https://#{KeyVaultName}#.vault.azure.net/"
+              value: "https://$KeyVaultName.vault.azure.net/"
           resources:
             limits:
               cpu: 300m
