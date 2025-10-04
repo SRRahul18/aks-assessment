@@ -54,7 +54,6 @@ spec:
         runAsNonRoot: true
         runAsUser: 10000
         runAsGroup: 10000
-        allowPrivilegeEscalation: false
       containers:
         - name: hello-node
           image: "$ACR_NAME.azurecr.io/$IMAGE_NAME:${IMAGE_TAG}"  # placeholder
