@@ -1,0 +1,8 @@
+checks:
+  doNotAutoAddDefaults: true
+  include:
+    - "privileged-container"
+    - "run-as-non-root"
+  exclude:
+    - "latest-tag"
+    - "unset-cpu-limits"

@@ -24,7 +24,7 @@ jobs:
         uses: stackrox/kube-linter-action@v1
         with:
           directory: src/hello-node-aks
-          config: .kube-linter/config.yaml
+          config: src/hello-node-aks/kubelinter/config.yaml
 
 
       # Validate Kubernetes YAML syntax
