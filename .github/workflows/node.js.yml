@@ -82,6 +82,7 @@ jobs:
           sed "s|\$ACR_NAME.azurecr.io/\$IMAGE_NAME:\${IMAGE_TAG}|$ACR_NAME.azurecr.io/$IMAGE_NAME:$IMAGE_TAG|g" \
             src/hello-node-aks/base/hello-node-app.yaml > src/hello-node-aks/base/hello-node-app.tmp.yaml
           mv src/hello-node-aks/base/hello-node-app.tmp.yaml src/hello-node-aks/base/hello-node-app.yaml
+          cat src/hello-node-aks/base/hello-node-app.yaml
 
       # Apply manifest to Kubernetes
       - name: Deploy to Kubernetes
