@@ -1,24 +1,23 @@
 # This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
 
-name: Node.js CI
+name: hello-node-aks-deploy
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
     
 env:
-  ACR_NAME: acrdevassessmentacr     # 🔹 Replace with your ACR name (without .azurecr.io)
-  IMAGE_NAME: hello-node       # 🔹 Replace with your app/image name
-  RESOURCE_GROUP: rg-dev-assessment        # 🔹 Replace with your RG
+  ACR_NAME: ${{ vars.ACR_NAME }}    
+  IMAGE_NAME: ${{ vars.IMAGE_NAME }}  
+  IMAGE_TAG: ${{ github.run_number }}-${{ github.sha }}     
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}        
   AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
   AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
   AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
   AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-  AKS_NAME: aks-dev-assessment
-  K8S_NAMESPACE: node
+  AKS_NAME: ${{ vars.AKS_NAME }}               
+  K8S_NAMESPACE: ${{ vars.K8S_NAMESPACE }}       
   
 jobs:
   build:
@@ -43,30 +42,23 @@ jobs:
       run: |
         az acr login --name $ACR_NAME
 
-    # 🔹 Set BUILD_ID (using GitHub Run Number)
-    - name: Set Build ID
-      run: echo "BUILD_ID=${GITHUB_RUN_NUMBER}" >> $GITHUB_ENV
-
     # 🔹 Build Docker image
     - name: Build Docker image
       run: |
         cd src/
-        docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID} .
+        docker build -t $ACR_NAME.azurecr.io/$IMAGE_NAME:${IMAGE_TAG} .
            
 
     # 🔹 Push Docker image
     - name: Push Docker image
       run: |
-        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}
-
-    # (Optional) Output image tag
-    - name: Print Image Tag
-      run: echo "Pushed image:$ACR_NAME.azurecr.io/$IMAGE_NAME:${BUILD_ID}"
+        docker push $ACR_NAME.azurecr.io/$IMAGE_NAME:${IMAGE_TAG}
 
   deploy-to-k8s:
     permissions:
       id-token: write
     runs-on: ubuntu-latest
+    environment: development
     needs: build
     steps:
       - name: Checkout code
@@ -97,5 +89,17 @@ jobs:
       # Apply manifest to Kubernetes
       - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f src/deployment.yml -n ${{ env.K8S_NAMESPACE }}
-          kubectl rollout status deployment/hello-node -n ${{ env.K8S_NAMESPACE }}    
+          set -e
+
+          echo "Applying Kubernetes manifests..."
+          kubectl apply -k "src/hello-node-aks/overlays/${{ vars.ENVIRONMENT }}"
+
+
+          echo "Waiting for rollout..."
+          if ! kubectl rollout status deployment/hello-node -n ${{ env.K8S_NAMESPACE }} --timeout=300s; then
+            echo "Rollout failed. Rolling back..."
+            kubectl rollout undo deployment/hello-node -n ${{ env.K8S_NAMESPACE }}
+            exit 1
+          else
+            echo "Rollout succeeded."
+          fi    
