@@ -27,7 +27,7 @@ jobs:
           config: src/hello-node-aks/kubelinter/config.yaml
 
 
-      # Validate Kubernetes YAML syntax
+      # Validate Kubernetes-YAML syntax
       - name: Validate manifests with kubectl dry-run
         run: |
           kubectl apply --dry-run=client -k "src/hello-node-aks/overlays/${{ vars.ENVIRONMENT }}"
