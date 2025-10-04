@@ -1,0 +1,42 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+      # Checkout the PR branch
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          cd src/
+          docker build -t hello-node:pr-${{ github.run_id }} .
+
+      # Install kube-linter
+      - name: Install kube-linter
+        run: |
+          curl -s https://api.github.com/repos/stackrox/kube-linter/releases/latest \
+            | grep "browser_download_url.*linux-amd64.tar.gz" \
+            | cut -d '"' -f 4 \
+            | wget -qi -
+          tar -xzf kube-linter-*-linux-amd64.tar.gz
+          sudo mv kube-linter /usr/local/bin/kube-linter
+          kube-linter version
+
+      # Lint Kubernetes manifests
+      - name: Run kube-linter on manifests
+        run: |
+          kube-linter lint src/hello-node-aks/base/*.yaml
+          kube-linter lint src/hello-node-aks/overlays/development/*.yaml
+
+      # Validate Kubernetes YAML syntax
+      - name: Validate manifests with kubectl dry-run
+        run: |
+          kubectl apply --dry-run=client -k "src/hello-node-aks/overlays/${{ vars.ENVIRONMENT }}"
