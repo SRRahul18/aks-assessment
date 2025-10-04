@@ -58,4 +58,5 @@ jobs:
       # Validate Kubernetes YAML syntax
       - name: Validate manifests with kubectl dry-run
         run: |
+          kubectl diff -k "src/hello-node-aks/overlays/${{ vars.ENVIRONMENT }}"
           kubectl apply --dry-run=client -k "src/hello-node-aks/overlays/${{ vars.ENVIRONMENT }}"
